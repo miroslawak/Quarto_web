@@ -1,0 +1,325 @@
+---
+title-block-banner: true
+title: "Regresja liniowa"
+author: "Mirosława Kołodziejczyk"
+date: "`r Sys.Date()`"
+format: html
+css: styles.css
+editor: visual
+---
+
+## Dane I
+
+## y = f(x)
+
+Generowanie danych.
+
+```{r}
+set.seed(1)
+x <- seq(1,50,1)+rnorm(50)
+y <- rnorm(50) + (x+15*rnorm(50))
+
+df <- data.frame(x,y)
+head(df)
+```
+
+```{r}
+#| label: tbl-1
+#| tbl-cap: "Dane wyjściowe do regresji liniowej y = f(x)"
+#| message: false
+#| warning: false
+
+if (!require(reactable)) {install.packages('reactable', 
+                        repos="http://cran.us.r-project.org"); require(reactable)}
+
+reactable(df)
+
+```
+
+## Wykres danych
+
+```{r, echo = F}
+#| label: fig-1
+#| fig-cap: "Dane podlegające regresji"
+
+
+plot(x,y, main = "y = f(x)")
+
+
+```
+
+## **Korelacja danych**
+
+Współczynnik korelacji Pearsona: <https://pogotowiestatystyczne.pl/slowniki/korelacja-pearsona/>
+
+```{r}
+
+korelacja <- cor(x,y)
+cat(paste("Współczynnik korelacji Pearsona r = ", as.character(korelacja)))
+
+
+if (korelacja >=0.7){
+  cat("Wniosek: korelacja bardzo silna")
+} else if (korelacja < 0.7 & korelacja >= 0.5){
+  cat("Wniosek: korelacja silna")
+} else if (korelacja < 0.5 & korelacja >= 0.3){
+  cat("Wniosek: korelacja umiarkowana")
+} else {
+    cat("Wniosek: korelacja słaba")
+}
+
+```
+
+## **Regresja liniowa**
+
+```{r}
+model_liniowy <- lm(y ~ x, data=df) 
+
+cat("Model liniowy danych: y = a + b*x\n\n")
+
+model_liniowy
+
+a<-round(model_liniowy$coefficients[1],5)
+b<-round(model_liniowy$coefficients[2],5)
+cat(paste("a = ", as.character(a)))
+cat(paste("b = ", as.character(b)))
+
+```
+
+## Wykres prostej regresji
+
+```{r}
+#| label: fig-2
+#| fig-cap: "Regresja liniowa y = a + b*x"
+
+plot(x,y, font.main = 1,main = paste("Model liniowy danych: y = a + b*x\n","a = ",
+                  as.character(a),"\nb = ", as.character(b)))
+abline(model_liniowy,col = "blue")
+
+
+```
+
+## **Podsumowanie**
+
+<https://boostedml.com/2019/06/linear-regression-in-r-interpreting-summarylm.html>
+
+```{r}
+summary(model_liniowy)
+
+m <- mean(model_liniowy$residuals)
+cat(paste("mean of residuals = ",as.character(m)))
+```
+
+"The F statistic is a ratio of the variance explained by the regression model relative to a model with just the intercept and no other variables. "
+
+1.  
+
+## Wykres residuów
+
+```{r}
+#| label: fig-33
+#| fig-cap: "Wykres residuów"
+ 
+x1 <- seq(1,length(model_liniowy$residuals),1)
+y1 <- model_liniowy$residuals
+z1 <- rep(c(0),times = length(model_liniowy$residuals))
+
+plot(x1,y1, font.main = 1,main = paste("Wykres residuów"),
+     xlab = "x", ylab= "residuum")
+abline(x1,z1,col = "blue")
+
+```
+
+## **Analiza**
+
+1.  Residua są mniej więcej symetryczne. Mediana niewiele odbiega od 0.
+
+2.  Statystyka t-Studenta liczona jest jako różnica od 0. W przypadku wyrazu wolnego (intercept) prawdopodobieństwo p (Pr) jest większe niż 0.05, więc róznica nie jest znacząca statystycznie. Dla współczynnika przy zmiennej x, p jest dużo mniejsze niż 0.05, co oznacza, że współczynnik ten rzeczywiście różni się od 0 w sposób znaczący statystycznie, czyli y jest funkcją x.
+
+3.  Statystyka F sprawdza hipotezę, czy wszystkie współczynniki dla zmiennych niezaleznych są równe 0 (hipoteza H0), czy przynajmnie jeden z nich jest istotnie różny od 0 (hipoteza H1). W tym przypadku p (Pr) jest dużo mniejsze niż 0.05, więc przynajmniej jeden ze współczynników jest różny od 0.
+
+4.  Współczynnik determinacji R2 to kwadrat współczynnika korelacji Pearsona. Wskazuje na procent wariancji, który powstaje jako skutek zmienności danych: <https://home.agh.edu.pl/~bartus/index.php?action=dydaktyka&subaction=statystyka&item=regresja_i_korelacja>; im bardziej punkty są skupione wokół prostej regresji, tym bliższy 1 jest R2; w tym wypadku R2 jest niewielki, czyli punkty nie są skupione wokół prostej.
+
+5.  Skorygowany R2:<https://www.ibm.com/docs/pl/cognos-analytics/11.1.0?topic=terms-adjusted-r-squared>
+
+Uwaga: Jeżeli funkcja jest funkcją kilku zmiennych, a nie jednej, należy 𝛼=0.05 (poziom istotności testu) podzielić przez liczbę zmniennych niezależnych (tzw. poprawka Bonferroniego). Rzecz dotyczy testu t-Studenta.
+
+## **Predykcja**
+
+Predykcję wykonano dla wyjściowych x.
+
+```{r}
+#| label: fig-3
+#| fig-cap: "Regresja liniowa - predykcja"
+
+xx<- x
+new<- data.frame(x=xx)
+yy<-predict(model_liniowy,newdata=new)
+ddff<- data.frame(xx,yy)
+plot(x,y)
+abline(model_liniowy,col = "blue")
+points(ddff, col = "red", pch = 16)
+```
+
+# **Dane II**
+
+## **z = f(x,y)**
+
+Generowanie danych.
+
+```{r}
+set.seed(1) 
+x <- seq(1,50,1)+rnorm(50) 
+y <- rnorm(50) + (x+15*rnorm(50))  
+z <- rnorm(50) + (x+15*rnorm(50)) + (y+30*rnorm(50))
+df <- data.frame(x,y,z)
+```
+
+```{r, echo = F}
+#| label: tbl-2
+#| tbl-cap: "Dane wyjściowe do regresji liniowej y = f(x,y)"
+
+reactable(df)
+
+```
+
+```{r}
+#| label: fig-4
+#| fig-cap: "Dane wyjściowe, podlegające regresji"
+#| message: false
+#| warning: false
+
+if (!require(scatterplot3d)) {install.packages('scatterplot3d', 
+                        repos="http://cran.us.r-project.org"); 
+                        require(scatterplot3d)}
+
+scatterplot3d(df[,1:3],pch = 16, color="steelblue")
+```
+
+## **Macierz korelacji**
+
+```{r, echo = F}
+#| label: fig-5
+#| fig-cap: "Korelacja danych"
+#| message: false
+#| warning: false
+
+korelacja <- cor(df)
+korelacja
+
+if (!require(corrplot)) {install.packages('corrplot', 
+                        repos="http://cran.us.r-project.org"); require(corrplot)}
+corrplot.mixed(korelacja, order = 'AOE')
+```
+
+## **A. Regresja liniowa (z = a + b\*x +c \*y)**
+
+## **(model bez interakcji)**
+
+```{r}
+model_liniowy <- lm(z ~ x+y, data=df) 
+model_liniowy
+```
+
+```{r}
+a<-round(model_liniowy$coefficients[1],5)
+b<-round(model_liniowy$coefficients[2],5)
+c<-round(model_liniowy$coefficients[3],5)
+
+cat("Model liniowy danych: z = a + b*x + c*y")
+cat(paste("a = ", as.character(a)))
+cat(paste("b = ", as.character(b)))
+cat(paste("c = ", as.character(c)))
+```
+
+## **Podsumowanie**
+
+```{r}
+summary(model_liniowy)
+```
+
+## **Predykcja**
+
+Predykcję wykonano dla wyjściowych x,y.
+
+```{r}
+xx <- x 
+yy <- y
+new <- data.frame(x=xx,y=yy)
+zz <- predict(model_liniowy,newdata=new)
+ddff <- data.frame(xx,yy,zz) 
+```
+
+```{r}
+#| label: fig-6
+#| fig-cap: "Predykcja: z = a + bx +cy"
+
+wykres <-scatterplot3d(df, pch = 16, color="steelblue", 
+                       main = "Płaszczyzna regresji")
+wykres$points3d(ddff, type = "l", col = "blue")
+wykres$points3d(ddff, pch = 16, col = "red")
+wykres$plane3d(model_liniowy , lty = "dotted", lty.box="solid")
+```
+
+```{r}
+#| label: fig-7
+#| fig-cap: "Predykcja z = a + bx +cy"
+
+wykres <-scatterplot3d(df, pch = 16, color="steelblue",
+                       main = "Płaszczyzna regresji, inny widok", angle = -27)
+wykres$points3d(ddff, type = "l", col = "blue")
+wykres$points3d(ddff, pch = 16, col = "red")
+wykres$plane3d(model_liniowy , lty = "dotted", lty.box="solid")
+```
+
+## **B. Regresja liniowa (z = a + b*x +c y +dx*y)**
+
+## **(model z interakcją)**
+
+```{r}
+model_liniowy <- lm(z ~ x*y, data=df) 
+model_liniowy
+```
+
+```{r}
+a<-round(model_liniowy$coefficients[1],5)
+b<-round(model_liniowy$coefficients[2],5)
+c<-round(model_liniowy$coefficients[3],5)
+d<-round(model_liniowy$coefficients[4],5)
+
+cat("Model liniowy danych: z = a + b*x + c*y + d*x*y\n\n")
+cat(paste("a = ", as.character(a)))
+cat(paste("b = ", as.character(b)))
+cat(paste("c = ", as.character(c)))
+cat(paste("d = ", as.character(d)))
+```
+
+## **Podsumowanie**
+
+```{r}
+summary(model_liniowy) 
+```
+
+## **Predykcja**
+
+Predykcję wykonano dla wyjściowych x,y.
+
+```{r}
+xx<- x 
+yy <- y
+new<- data.frame(x=xx,y=yy)
+
+zz<-predict(model_liniowy,newdata=new)
+ddff<- data.frame(xx,yy,zz)  
+```
+
+```{r}
+#| label: fig-8
+#| fig-cap: "Regresja liniowa z interakcją"
+
+wykres <-scatterplot3d(df, pch = 16, color="steelblue",
+                       main = "z = a + b*x + c*y + d*x*y", angle = -27)
+wykres$points3d(ddff, type = "l", col = "blue")
+wykres$points3d(ddff, pch = 16, col = "red")
+wykres$plane3d(a,b,c,lty = "dotted", lty.box="solid")
+```

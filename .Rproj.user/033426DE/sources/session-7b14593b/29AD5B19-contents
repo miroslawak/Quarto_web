@@ -1,0 +1,98 @@
+---
+title-block-banner: true
+title: "Regresja liniowa"
+author: "Mirosława Kołodziejczyk"
+date: "`r Sys.Date()`"
+format: html
+---
+
+## Dane I
+
+## y = f(x)
+
+Generowanie danych.
+
+```{r}
+set.seed(1)
+x <- seq(1,50,1)+rnorm(50)
+y <- rnorm(50) + (x+15*rnorm(50))
+
+df <- data.frame(x,y)
+head(df)
+```
+
+```{r}
+#| label: tbl-1
+#| tbl-cap: "Dane wyjściowe do regresji liniowej y = f(x)"
+#| message: false
+#| warning: false
+
+if (!require(reactable)) {install.packages('reactable', 
+                        repos="http://cran.us.r-project.org"); require(reactable)}
+
+reactable(df)
+
+```
+
+## Wykres danych
+
+```{r, echo = F}
+#| label: fig-1
+#| fig-cap: "Dane podlegające regresji"
+
+
+plot(x,y, main = "y = f(x)")
+
+
+```
+
+## **Korelacja danych**
+
+Współczynnik korelacji Pearsona: <https://pogotowiestatystyczne.pl/slowniki/korelacja-pearsona/>
+
+```{r}
+
+korelacja <- cor(x,y)
+cat(paste("Współczynnik korelacji Pearsona r = ", as.character(korelacja)))
+
+
+if (korelacja >=0.7){
+  cat("Wniosek: korelacja bardzo silna")
+} else if (korelacja < 0.7 & korelacja >= 0.5){
+  cat("Wniosek: korelacja silna")
+} else if (korelacja < 0.5 & korelacja >= 0.3){
+  cat("Wniosek: korelacja umiarkowana")
+} else {
+    cat("Wniosek: korelacja słaba")
+}
+
+```
+
+## **Regresja liniowa**
+
+```{r}
+model_liniowy <- lm(y ~ x, data=df) 
+
+cat("Model liniowy danych: y = a + b*x\n\n")
+
+model_liniowy
+
+a<-round(model_liniowy$coefficients[1],5)
+b<-round(model_liniowy$coefficients[2],5)
+cat(paste("a = ", as.character(a)))
+cat(paste("b = ", as.character(b)))
+
+```
+
+## Wykres prostej regresji
+
+```{r}
+#| label: fig-2
+#| fig-cap: "Regresja liniowa y = a + b*x"
+
+plot(x,y, font.main = 1,main = paste("Model liniowy danych: y = a + b*x\n","a = ",
+                  as.character(a),"\nb = ", as.character(b)))
+abline(model_liniowy,col = "blue")
+
+
+```
